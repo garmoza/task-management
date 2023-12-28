@@ -1,4 +1,4 @@
-package garmoza.taskmanagement.task;
+package garmoza.taskmanagement.entity;
 
 public enum TaskStatus {
     PENDING, IN_PROGRESS, COMPLETED

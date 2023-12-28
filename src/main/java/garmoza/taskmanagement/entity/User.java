@@ -1,7 +1,6 @@
-package garmoza.taskmanagement.user;
+package garmoza.taskmanagement.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import garmoza.taskmanagement.task.Task;
 import jakarta.persistence.*;
 import lombok.*;
 

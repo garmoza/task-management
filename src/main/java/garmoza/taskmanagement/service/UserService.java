@@ -1,8 +1,9 @@
-package garmoza.taskmanagement.user;
+package garmoza.taskmanagement.service;
 
-import garmoza.taskmanagement.user.dto.UserCreateDTO;
-import garmoza.taskmanagement.user.dto.UserPutDTO;
-import garmoza.taskmanagement.user.dto.UserResponseDTO;
+import garmoza.taskmanagement.entity.User;
+import garmoza.taskmanagement.dto.user.UserCreateDTO;
+import garmoza.taskmanagement.dto.user.UserPutDTO;
+import garmoza.taskmanagement.dto.user.UserResponseDTO;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

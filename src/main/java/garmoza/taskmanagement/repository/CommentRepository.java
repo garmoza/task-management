@@ -1,5 +1,6 @@
-package garmoza.taskmanagement.comment;
+package garmoza.taskmanagement.repository;
 
+import garmoza.taskmanagement.entity.Comment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

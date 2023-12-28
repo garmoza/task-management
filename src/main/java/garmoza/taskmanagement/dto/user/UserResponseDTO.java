@@ -1,4 +1,4 @@
-package garmoza.taskmanagement.user.dto;
+package garmoza.taskmanagement.dto.user;
 
 import lombok.Builder;
 import lombok.Getter;

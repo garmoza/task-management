@@ -1,7 +1,8 @@
-package garmoza.taskmanagement.user;
+package garmoza.taskmanagement.dto;
 
-import garmoza.taskmanagement.user.dto.UserCreateDTO;
-import garmoza.taskmanagement.user.dto.UserResponseDTO;
+import garmoza.taskmanagement.entity.User;
+import garmoza.taskmanagement.dto.user.UserCreateDTO;
+import garmoza.taskmanagement.dto.user.UserResponseDTO;
 import org.springframework.stereotype.Component;
 
 @Component

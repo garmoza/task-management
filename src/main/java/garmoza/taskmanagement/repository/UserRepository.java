@@ -1,5 +1,6 @@
-package garmoza.taskmanagement.user;
+package garmoza.taskmanagement.repository;
 
+import garmoza.taskmanagement.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

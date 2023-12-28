@@ -1,8 +1,9 @@
-package garmoza.taskmanagement.user;
+package garmoza.taskmanagement.controller;
 
-import garmoza.taskmanagement.user.dto.UserCreateDTO;
-import garmoza.taskmanagement.user.dto.UserPutDTO;
-import garmoza.taskmanagement.user.dto.UserResponseDTO;
+import garmoza.taskmanagement.dto.user.UserCreateDTO;
+import garmoza.taskmanagement.dto.user.UserPutDTO;
+import garmoza.taskmanagement.dto.user.UserResponseDTO;
+import garmoza.taskmanagement.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;

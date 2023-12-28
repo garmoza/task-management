@@ -1,6 +1,5 @@
-package garmoza.taskmanagement.task;
+package garmoza.taskmanagement.entity;
 
-import garmoza.taskmanagement.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 
