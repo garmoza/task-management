@@ -42,11 +42,11 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
-    private UserService userService;
-
     @Autowired
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private UserService userService;
 
     private UserCreateDTO createDTO = UserCreateDTO.builder()
             .email("test@mail.com")
