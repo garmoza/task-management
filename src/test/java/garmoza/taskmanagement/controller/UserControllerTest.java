@@ -7,8 +7,11 @@ import garmoza.taskmanagement.dto.user.UserResponseDTO;
 import garmoza.taskmanagement.security.service.JwtService;
 import garmoza.taskmanagement.service.UserService;
 import org.hamcrest.CoreMatchers;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,24 +48,46 @@ class UserControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    private static final UserCreateDTO createDTO = UserCreateDTO.builder()
+    private UserCreateDTO createDTO = UserCreateDTO.builder()
             .email("test@mail.com")
             .rawPassword("pass")
             .authorities(Set.of("ROLE_ADMIN"))
             .build();
 
-    private static final UserResponseDTO responseDTO = UserResponseDTO.builder()
+    private UserResponseDTO responseDTO = UserResponseDTO.builder()
             .id(1L)
             .email("test@mail.com")
             .authorities(Set.of("ROLE_ADMIN"))
             .build();
 
-    private static final UserPutDTO putDTO = UserPutDTO.builder()
+    private UserPutDTO putDTO = UserPutDTO.builder()
             .id(1L)
             .email("changed@mail.com")
             .rawPassword("changed_pass")
             .authorities(Set.of("ROLE_CHANGED"))
             .build();
+
+    @BeforeEach
+    void setUp() {
+        createDTO = UserCreateDTO.builder()
+                .email("test@mail.com")
+                .rawPassword("pass")
+                .authorities(Set.of("ROLE_ADMIN"))
+                .build();
+
+        responseDTO = UserResponseDTO.builder()
+                .id(1L)
+                .email("test@mail.com")
+                .authorities(Set.of("ROLE_ADMIN"))
+                .build();
+
+        putDTO = UserPutDTO.builder()
+                .id(1L)
+                .email("changed@mail.com")
+                .rawPassword("changed_pass")
+                .authorities(Set.of("ROLE_CHANGED"))
+                .build();
+    }
 
     private static final String jsonResponseDTO = """
             {
@@ -101,6 +126,47 @@ class UserControllerTest {
     }
 
     @Test
+    void postUser_validation_nulls() throws Exception {
+        ResultActions response = mockMvc.perform(post("/users")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "email": "must not be blank",
+                            "rawPassword": "must not be blank",
+                            "authorities": "must not be empty"
+                        }
+                        """));
+    }
+
+    @Test
+    void postUser_validation_email() throws Exception {
+        createDTO.setEmail("not-email");
+        var notValid = createDTO;
+
+        ResultActions response = mockMvc.perform(post("/users")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(notValid))
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "email": "must be a well-formed email address"
+                        }
+                        """));
+    }
+
+    @Test
     void putUser() throws Exception {
         given(userService.putUser(Mockito.any(UserPutDTO.class))).willReturn(responseDTO);
 
@@ -112,6 +178,48 @@ class UserControllerTest {
 
         response.andExpect(MockMvcResultMatchers.status().isOk())
                 .andExpect(content().json(jsonResponseDTO));
+    }
+
+    @Test
+    void putUser_validation_nulls() throws Exception {
+        ResultActions response = mockMvc.perform(put("/users")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "id": "must be greater than 0",
+                            "email": "must not be blank",
+                            "rawPassword": "must not be blank",
+                            "authorities": "must not be empty"
+                        }
+                        """));
+    }
+
+    @Test
+    void putUser_validation_email() throws Exception {
+        putDTO.setEmail("not-email");
+        var notValid = putDTO;
+
+        ResultActions response = mockMvc.perform(put("/users")
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(notValid))
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "email": "must be a well-formed email address"
+                        }
+                        """));
     }
 
     @Test
@@ -127,6 +235,23 @@ class UserControllerTest {
                 .andExpect(content().json(jsonResponseDTO));
     }
 
+    @ParameterizedTest
+    @ValueSource(longs = {0L, -2L})
+    void getUserById_validation_params(long id) throws Exception {
+        ResultActions response = mockMvc.perform(get("/users/%d".formatted(id))
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "id": "must be greater than 0"
+                        }
+                        """));
+    }
+
     @Test
     void deleteUserById() throws Exception {
         long id = 1L;
@@ -135,5 +260,22 @@ class UserControllerTest {
         ResultActions response = mockMvc.perform(delete("/users/%d".formatted(id)));
 
         response.andExpect(MockMvcResultMatchers.status().isNoContent());
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0L, -2L})
+    void deleteUserById_validation_params(long id) throws Exception {
+        ResultActions response = mockMvc.perform(delete("/users/%d".formatted(id))
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "id": "must be greater than 0"
+                        }
+                        """));
     }
 }
