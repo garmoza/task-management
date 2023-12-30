@@ -41,31 +41,15 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private ObjectMapper objectMapper;
 
     @MockBean
     private UserService userService;
 
-    private UserCreateDTO createDTO = UserCreateDTO.builder()
-            .email("test@mail.com")
-            .rawPassword("pass")
-            .authorities(Set.of("ROLE_ADMIN"))
-            .build();
-
-    private UserResponseDTO responseDTO = UserResponseDTO.builder()
-            .id(1L)
-            .email("test@mail.com")
-            .authorities(Set.of("ROLE_ADMIN"))
-            .build();
-
-    private UserPutDTO putDTO = UserPutDTO.builder()
-            .id(1L)
-            .email("changed@mail.com")
-            .rawPassword("changed_pass")
-            .authorities(Set.of("ROLE_CHANGED"))
-            .build();
+    private UserCreateDTO createDTO;
+    private UserResponseDTO responseDTO;
+    private UserPutDTO putDTO;
 
     @BeforeEach
     void setUp() {
