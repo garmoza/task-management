@@ -18,11 +18,17 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        User user = User.builder()
-                .email("admin")
+        User user1 = User.builder()
+                .email("admin@mail.com")
                 .password(passwordEncoder.encode("admin"))
                 .authorities(Set.of("ROLE_ADMIN"))
                 .build();
-        userRepository.save(user);
+        User user2 = User.builder()
+                .email("user@mail.com")
+                .password(passwordEncoder.encode("user"))
+                .authorities(Set.of("ROLE_USER"))
+                .build();
+        userRepository.save(user1);
+        userRepository.save(user2);
     }
 }

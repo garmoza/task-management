@@ -39,6 +39,7 @@ public class SecurityFilterChainConfig {
 
         http.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> authorizeHttpRequestsCustomizer
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/auth").permitAll()
                 .anyRequest().authenticated());
 
