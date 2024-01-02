@@ -35,8 +35,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authHeader.substring(7);
         username = jwtService.extractUsername(jwt);
         if (username != null && !jwtService.isTokenExpired(jwt)) {
-            Claims claims = jwtService.extractAllClaims(jwt);
-            List<String> authorities = claims.get("authorities", List.class);
+            List<String> authorities = jwtService.extractAuthorities(jwt);
             Authentication a = new UsernamePasswordAuthenticationToken(
                     username,
                     null,

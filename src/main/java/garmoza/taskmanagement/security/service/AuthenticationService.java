@@ -9,7 +9,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +26,6 @@ public class AuthenticationService {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
-        return jwtService.generateToken(Map.of("authorities", authorities), authentication.getName());
+        return jwtService.generateTokenWithAuthorities(authentication.getName(), authorities);
     }
 }
