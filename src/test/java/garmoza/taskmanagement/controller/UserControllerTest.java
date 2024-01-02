@@ -2,9 +2,9 @@ package garmoza.taskmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import garmoza.taskmanagement.dto.user.UserCreateDTO;
+import garmoza.taskmanagement.dto.user.UserPatchDTO;
 import garmoza.taskmanagement.dto.user.UserPutDTO;
 import garmoza.taskmanagement.dto.user.UserResponseDTO;
-import garmoza.taskmanagement.security.service.JwtService;
 import garmoza.taskmanagement.security.service.JwtServiceImpl;
 import garmoza.taskmanagement.service.UserService;
 import org.hamcrest.CoreMatchers;
@@ -29,6 +29,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.List;
 import java.util.Set;
 
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -51,6 +52,7 @@ class UserControllerTest {
     private UserCreateDTO createDTO;
     private UserResponseDTO responseDTO;
     private UserPutDTO putDTO;
+    private UserPatchDTO patchDTO;
 
     @BeforeEach
     void setUp() {
@@ -72,6 +74,11 @@ class UserControllerTest {
                 .rawPassword("changed_pass")
                 .authorities(Set.of("ROLE_CHANGED"))
                 .build();
+
+        patchDTO = new UserPatchDTO();
+        patchDTO.setEmail("patched@mail.com");
+        patchDTO.setRawPassword("patched_pass");
+        patchDTO.setAuthorities(Set.of("ROLE_PATCHED"));
     }
 
     private static final String jsonResponseDTO = """
@@ -262,5 +269,54 @@ class UserControllerTest {
                             "id": "must be greater than 0"
                         }
                         """));
+    }
+
+    @Test
+    void patchUserById() throws Exception {
+        long id = 1L;
+        given(userService.patchUserById(eq(id), Mockito.any(UserPatchDTO.class))).willReturn(responseDTO);
+
+        ResultActions response = mockMvc.perform(patch("/users/%d".formatted(id))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(patchDTO))
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(content().json(jsonResponseDTO));
+    }
+
+    @ParameterizedTest
+    @ValueSource(longs = {0L, -2L})
+    void patchUserById_validation_params(long id) throws Exception {
+        ResultActions response = mockMvc.perform(patch("/users/%d".formatted(id))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(patchDTO))
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "id": "must be greater than 0"
+                        }
+                        """));
+    }
+
+    @Test
+    void patchUserById_validation_withoutBody() throws Exception {
+        long id = 1L;
+        given(userService.patchUserById(eq(id), Mockito.any(UserPatchDTO.class))).willReturn(responseDTO);
+
+        ResultActions response = mockMvc.perform(patch("/users/%d".formatted(id))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(content().json(jsonResponseDTO));
     }
 }

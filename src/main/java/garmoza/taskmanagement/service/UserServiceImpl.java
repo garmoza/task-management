@@ -2,6 +2,7 @@ package garmoza.taskmanagement.service;
 
 import garmoza.taskmanagement.dto.UserDtoMapper;
 import garmoza.taskmanagement.dto.user.UserCreateDTO;
+import garmoza.taskmanagement.dto.user.UserPatchDTO;
 import garmoza.taskmanagement.dto.user.UserPutDTO;
 import garmoza.taskmanagement.dto.user.UserResponseDTO;
 import garmoza.taskmanagement.entity.User;
@@ -43,7 +44,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserResponseDTO findUserById(Long id) {
+    public UserResponseDTO findUserById(long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
@@ -65,7 +66,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void deleteUserById(Long id) {
+    public void deleteUserById(long id) {
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public UserResponseDTO patchUserById(long id, UserPatchDTO dto) {
+        return null;
     }
 }

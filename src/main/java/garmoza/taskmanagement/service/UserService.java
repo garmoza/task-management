@@ -1,5 +1,6 @@
 package garmoza.taskmanagement.service;
 
+import garmoza.taskmanagement.dto.user.UserPatchDTO;
 import garmoza.taskmanagement.entity.User;
 import garmoza.taskmanagement.dto.user.UserCreateDTO;
 import garmoza.taskmanagement.dto.user.UserPutDTO;
@@ -16,9 +17,11 @@ public interface UserService {
 
     List<UserResponseDTO> findAllUsers(Pageable pageable);
 
-    UserResponseDTO findUserById(Long id);
+    UserResponseDTO findUserById(long id);
 
     UserResponseDTO putUser(UserPutDTO dto);
 
-    void deleteUserById(Long id);
+    void deleteUserById(long id);
+
+    UserResponseDTO patchUserById(long id, UserPatchDTO dto);
 }

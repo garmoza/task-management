@@ -1,6 +1,7 @@
 package garmoza.taskmanagement.controller;
 
 import garmoza.taskmanagement.dto.user.UserCreateDTO;
+import garmoza.taskmanagement.dto.user.UserPatchDTO;
 import garmoza.taskmanagement.dto.user.UserPutDTO;
 import garmoza.taskmanagement.dto.user.UserResponseDTO;
 import garmoza.taskmanagement.service.UserService;
@@ -48,5 +49,10 @@ public class UserController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUserById(@PathVariable @Positive long id) {
         userService.deleteUserById(id);
+    }
+
+    @PatchMapping("/{id}")
+    public UserResponseDTO patchUserById(@PathVariable @Positive long id, @RequestBody UserPatchDTO dto) {
+        return userService.patchUserById(id, dto);
     }
 }
