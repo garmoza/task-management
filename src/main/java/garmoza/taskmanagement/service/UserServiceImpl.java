@@ -11,9 +11,13 @@ import garmoza.taskmanagement.exception.UserNotFoundException;
 import garmoza.taskmanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -81,7 +85,14 @@ public class UserServiceImpl implements UserService {
     public UserResponseDTO patchUserById(long id, UserPatchDTO dto) {
         User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
-        Set<String> allowedAttrs = Set.of("email", "rawPassword", "authorities");
+        Authentication auth = getAuthentication();
+        Set<String> allowedAttrs = new HashSet<>();
+        if (isAdmin(auth)) {
+            allowedAttrs.addAll(Set.of("email", "rawPassword", "authorities"));
+        }
+        if (isCurrentUser(user, auth)) {
+            allowedAttrs.addAll(Set.of("email", "rawPassword"));
+        }
 
         patchDtoValidator.validate(dto, allowedAttrs);
 
@@ -97,5 +108,17 @@ public class UserServiceImpl implements UserService {
         }
 
         return dtoMapper.toResponseDTO(userRepository.save(user));
+    }
+
+    private Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    private boolean isAdmin(Authentication auth) {
+        return auth.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
+    private boolean isCurrentUser(User user, Authentication auth) {
+        return user.getEmail().equals(auth.getName());
     }
 }

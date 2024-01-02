@@ -40,11 +40,11 @@ public class SecurityFilterChainConfig {
         http.authorizeHttpRequests(authorizeHttpRequestsCustomizer -> authorizeHttpRequestsCustomizer
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/auth").permitAll()
-                .requestMatchers(HttpMethod.GET, "/users").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.POST, "/users").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PUT, "/users").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.DELETE, "/users").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.PATCH, "/users").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/users").hasAnyRole("ADMIN", "USER")
+                .requestMatchers(HttpMethod.POST, "/users").hasAnyRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/users").hasAnyRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/users").hasAnyRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/users").hasAnyRole("ADMIN", "USER")
                 .anyRequest().authenticated());
 
         return http.build();

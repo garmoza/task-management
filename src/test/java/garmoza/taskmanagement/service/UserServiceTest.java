@@ -15,6 +15,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -85,6 +89,13 @@ class UserServiceTest {
         userPatchDTO.setEmail("patched@mail.com");
         userPatchDTO.setRawPassword("patched_pass");
         userPatchDTO.setAuthorities(Set.of("ROLE_PATCHED"));
+
+        Authentication a = new UsernamePasswordAuthenticationToken(
+                "test@mail.com",
+                null,
+                Set.of("ROLE_ADMIN").stream().map(SimpleGrantedAuthority::new).toList()
+        );
+        SecurityContextHolder.getContext().setAuthentication(a);
     }
 
     @Test
