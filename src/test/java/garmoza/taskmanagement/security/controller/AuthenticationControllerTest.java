@@ -3,7 +3,6 @@ package garmoza.taskmanagement.security.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import garmoza.taskmanagement.security.config.SecurityFilterChainConfig;
 import garmoza.taskmanagement.security.service.AuthenticationService;
-import garmoza.taskmanagement.security.service.JwtService;
 import garmoza.taskmanagement.security.service.JwtServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,10 +59,11 @@ class AuthenticationControllerTest {
                 .andExpect(content().string(jwt));
     }
 
+    @Test
     void authenticate_validation_nulls() throws Exception {
         ResultActions response = mockMvc.perform(post("/auth")
                 .contentType(MediaType.APPLICATION_JSON)
-                .contentType("{}")
+                .content("{}")
         );
 
         response.andExpect(MockMvcResultMatchers.status().isBadRequest())
@@ -77,6 +77,7 @@ class AuthenticationControllerTest {
                         """));
     }
 
+    @Test
     void authenticate_validation_email() throws Exception {
         request.setEmail("not-email");
         var notValid = request;
