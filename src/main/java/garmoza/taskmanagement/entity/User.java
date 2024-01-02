@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -24,10 +25,16 @@ public class User {
     @JsonIgnore
     @Column(name = "password")
     private String password;
+    @Builder.Default
     @ElementCollection(fetch = FetchType.LAZY)
-    private Set<String> authorities;
+    private Set<String> authorities = new HashSet<>();
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
-    private Set<Task> createdTasks;
+    private Set<Task> createdTasks = new HashSet<>();
+    @Builder.Default
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "performer")
-    private Set<Task> performedTasks;
+    private Set<Task> performedTasks = new HashSet<>();
+    @Builder.Default
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
+    private Set<Comment> writtenComments = new HashSet<>();
 }
