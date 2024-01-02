@@ -1,7 +1,6 @@
 package garmoza.taskmanagement.security.filter;
 
 import garmoza.taskmanagement.security.service.JwtService;
-import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
