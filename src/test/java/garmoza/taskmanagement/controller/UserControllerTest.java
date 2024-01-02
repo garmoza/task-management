@@ -5,6 +5,7 @@ import garmoza.taskmanagement.dto.user.UserCreateDTO;
 import garmoza.taskmanagement.dto.user.UserPutDTO;
 import garmoza.taskmanagement.dto.user.UserResponseDTO;
 import garmoza.taskmanagement.security.service.JwtService;
+import garmoza.taskmanagement.security.service.JwtServiceImpl;
 import garmoza.taskmanagement.service.UserService;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest({UserController.class})
 @AutoConfigureMockMvc(addFilters = false) // disables security
-@Import({JwtService.class})
+@Import({JwtServiceImpl.class})
 @ExtendWith(MockitoExtension.class)
 class UserControllerTest {
 

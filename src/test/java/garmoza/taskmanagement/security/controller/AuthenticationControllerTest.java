@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import garmoza.taskmanagement.security.config.SecurityFilterChainConfig;
 import garmoza.taskmanagement.security.service.AuthenticationService;
 import garmoza.taskmanagement.security.service.JwtService;
+import garmoza.taskmanagement.security.service.JwtServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest({AuthenticationController.class})
-@Import({SecurityFilterChainConfig.class, JwtService.class})
+@Import({SecurityFilterChainConfig.class, JwtServiceImpl.class})
 @ExtendWith(MockitoExtension.class)
 class AuthenticationControllerTest {
 
