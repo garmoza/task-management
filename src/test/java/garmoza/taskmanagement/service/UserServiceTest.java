@@ -1,7 +1,9 @@
 package garmoza.taskmanagement.service;
 
+import garmoza.taskmanagement.dto.PatchDtoValidator;
 import garmoza.taskmanagement.dto.UserDtoMapper;
 import garmoza.taskmanagement.dto.user.UserCreateDTO;
+import garmoza.taskmanagement.dto.user.UserPatchDTO;
 import garmoza.taskmanagement.dto.user.UserPutDTO;
 import garmoza.taskmanagement.dto.user.UserResponseDTO;
 import garmoza.taskmanagement.entity.User;
@@ -13,16 +15,19 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -31,6 +36,10 @@ class UserServiceTest {
     private UserRepository userRepository;
     @Mock
     private UserDtoMapper userDtoMapper;
+    @Mock
+    private PasswordEncoder passwordEncoder;
+    @Mock
+    private PatchDtoValidator patchDtoValidator;
 
     @InjectMocks
     private UserServiceImpl userService;
@@ -42,6 +51,7 @@ class UserServiceTest {
     private UserCreateDTO userCreateDTO;
     private UserResponseDTO userResponseDTO;
     private UserPutDTO userPutDTO;
+    private UserPatchDTO userPatchDTO;
 
     @BeforeEach
     void setUp() {
@@ -70,6 +80,11 @@ class UserServiceTest {
                 .rawPassword("changed_pass")
                 .authorities(Set.of("ROLE_CHANGED"))
                 .build();
+
+        userPatchDTO = new UserPatchDTO();
+        userPatchDTO.setEmail("patched@mail.com");
+        userPatchDTO.setRawPassword("patched_pass");
+        userPatchDTO.setAuthorities(Set.of("ROLE_PATCHED"));
     }
 
     @Test
@@ -86,12 +101,15 @@ class UserServiceTest {
     @Test
     void createUser() {
         given(userDtoMapper.toEntity(userCreateDTO)).willReturn(user);
+        given(passwordEncoder.encode(userCreateDTO.getRawPassword())).willReturn("encoded-pass");
         given(userRepository.save(user)).willReturn(user);
         given(userDtoMapper.toResponseDTO(user)).willReturn(userResponseDTO);
 
         UserResponseDTO saved = userService.createUser(userCreateDTO);
 
-        then(userRepository).should().save(user);
+        then(userRepository).should().save(userArgumentCaptor.capture());
+        User userBeforeSave = userArgumentCaptor.getValue();
+        assertEquals("encoded-pass", userBeforeSave.getPassword());
         assertThat(saved).isEqualTo(userResponseDTO);
     }
 
@@ -142,17 +160,16 @@ class UserServiceTest {
         given(userRepository.save(Mockito.any(User.class))).willReturn(user);
         given(userDtoMapper.toResponseDTO(user)).willReturn(userResponseDTO);
 
-        UserResponseDTO updatedDto = userService.putUser(userPutDTO);
+        UserResponseDTO updatedDTO = userService.putUser(userPutDTO);
 
         // updated instance before save
         then(userRepository).should().save(userArgumentCaptor.capture());
         User userBeforeSave = userArgumentCaptor.getValue();
-        assertEquals(userPutDTO.getId(), userBeforeSave.getId());
         assertEquals(userPutDTO.getEmail(), userBeforeSave.getEmail());
         assertEquals(userPutDTO.getRawPassword(), userBeforeSave.getPassword());
         assertEquals(userPutDTO.getAuthorities(), userBeforeSave.getAuthorities());
 
-        assertThat(updatedDto).isEqualTo(userResponseDTO);
+        assertThat(updatedDTO).isEqualTo(userResponseDTO);
     }
 
     @Test
@@ -170,5 +187,26 @@ class UserServiceTest {
         userService.deleteUserById(userId);
 
         then(userRepository).should().deleteById(userId);
+    }
+
+    @Test
+    void patchUserById() {
+        long userId = 1L;
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        doNothing().when(patchDtoValidator).validate(userPatchDTO, Set.of("email", "rawPassword", "authorities"));
+        given(passwordEncoder.encode(userPatchDTO.getRawPassword())).willReturn("encoded-pass");
+        given(userRepository.save(Mockito.any(User.class))).willReturn(user);
+        given(userDtoMapper.toResponseDTO(user)).willReturn(userResponseDTO);
+
+        UserResponseDTO patchedDTO = userService.patchUserById(userId, userPatchDTO);
+
+        // patched instance before save
+        then(userRepository).should().save(userArgumentCaptor.capture());
+        User userBeforeSave = userArgumentCaptor.getValue();
+        assertEquals(userPatchDTO.getEmail(), userBeforeSave.getEmail());
+        assertEquals("encoded-pass", userBeforeSave.getPassword());
+        assertEquals(userPatchDTO.getAuthorities(), userBeforeSave.getAuthorities());
+
+        assertThat(patchedDTO).isEqualTo(userResponseDTO);
     }
 }
