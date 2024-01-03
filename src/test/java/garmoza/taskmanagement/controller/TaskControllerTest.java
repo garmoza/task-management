@@ -1,12 +1,14 @@
 package garmoza.taskmanagement.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import garmoza.taskmanagement.dto.user.UserCreateDTO;
-import garmoza.taskmanagement.dto.user.UserPatchDTO;
-import garmoza.taskmanagement.dto.user.UserPutDTO;
-import garmoza.taskmanagement.dto.user.UserResponseDTO;
+import garmoza.taskmanagement.dto.task.TaskCreateDTO;
+import garmoza.taskmanagement.dto.task.TaskPatchDTO;
+import garmoza.taskmanagement.dto.task.TaskPutDTO;
+import garmoza.taskmanagement.dto.task.TaskResponseDTO;
+import garmoza.taskmanagement.entity.TaskPriority;
+import garmoza.taskmanagement.entity.TaskStatus;
 import garmoza.taskmanagement.security.service.JwtServiceImpl;
-import garmoza.taskmanagement.service.UserService;
+import garmoza.taskmanagement.service.TaskService;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +29,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -35,11 +36,11 @@ import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
-@WebMvcTest({UserController.class})
-@AutoConfigureMockMvc(addFilters = false) // disables security
+@WebMvcTest({TaskController.class})
+@AutoConfigureMockMvc(addFilters = false)
 @Import({JwtServiceImpl.class})
 @ExtendWith(MockitoExtension.class)
-class UserControllerTest {
+class TaskControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -47,55 +48,70 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    private UserService userService;
+    private TaskService taskService;
 
-    private UserCreateDTO createDTO;
-    private UserResponseDTO responseDTO;
-    private UserPutDTO putDTO;
-    private UserPatchDTO patchDTO;
+    private TaskCreateDTO createDTO;
+    private TaskResponseDTO responseDTO;
+    private TaskPutDTO putDTO;
+    private TaskPatchDTO patchDTO;
 
     @BeforeEach
     void setUp() {
-        createDTO = UserCreateDTO.builder()
-                .email("test@mail.com")
-                .rawPassword("pass")
-                .authorities(Set.of("ROLE_ADMIN"))
+        createDTO = TaskCreateDTO.builder()
+                .title("Task title")
+                .description("Task description")
+                .status(TaskStatus.PENDING)
+                .priority(TaskPriority.LOW)
+                .authorId(2L)
+                .performerId(3L)
                 .build();
 
-        responseDTO = UserResponseDTO.builder()
+        responseDTO = TaskResponseDTO.builder()
                 .id(1L)
-                .email("test@mail.com")
-                .authorities(Set.of("ROLE_ADMIN"))
+                .title("Task title")
+                .description("Task description")
+                .status(TaskStatus.PENDING)
+                .priority(TaskPriority.LOW)
                 .build();
 
-        putDTO = UserPutDTO.builder()
+        putDTO = TaskPutDTO.builder()
                 .id(1L)
-                .email("changed@mail.com")
-                .rawPassword("changed_pass")
-                .authorities(Set.of("ROLE_CHANGED"))
+                .title("Updated title")
+                .description("Updated description")
+                .status(TaskStatus.COMPLETED)
+                .priority(TaskPriority.HIGH)
+                .authorId(2L)
+                .performerId(3L)
                 .build();
 
-        patchDTO = new UserPatchDTO();
-        patchDTO.setEmail("patched@mail.com");
-        patchDTO.setRawPassword("patched_pass");
-        patchDTO.setAuthorities(Set.of("ROLE_PATCHED"));
+        patchDTO = new TaskPatchDTO();
+        patchDTO.setTitle("Patched title");
+        patchDTO.setDescription("Patched description");
+        patchDTO.setStatus(TaskStatus.IN_PROGRESS);
+        patchDTO.setPriority(TaskPriority.MEDIUM);
+        patchDTO.setAuthorId(5L);
+        patchDTO.setPerformerId(6L);
     }
 
     private static final String jsonResponseDTO = """
             {
                 "id": 1,
-                "email": "test@mail.com",
-                "authorities": ["ROLE_ADMIN"]
+                "title": "Task title",
+                "description": "Task description",
+                "status": "PENDING",
+                "priority": "LOW"
             }
             """;
 
     @Test
-    void getAllUsers() throws Exception {
+    void getAllTasks() throws Exception {
+        Long authorId = 1L;
+        Long performerId = 2L;
         var pageable = PageRequest.of(0, 20);
         var responseDto = List.of(responseDTO);
-        given(userService.findAllUsers(pageable)).willReturn(responseDto);
+        given(taskService.findAllTasks(authorId, performerId, pageable)).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(get("/users")
+        ResultActions response = mockMvc.perform(get("/tasks?authorId=1&performerId=2&page=0&size=20")
                 .accept(MediaType.APPLICATION_JSON)
         );
 
@@ -104,10 +120,41 @@ class UserControllerTest {
     }
 
     @Test
-    void postUser() throws Exception {
-        given(userService.createUser(Mockito.any(UserCreateDTO.class))).willReturn(responseDTO);
+    void getAllTasks_validation_nulls() throws Exception {
+        var pageable = PageRequest.of(0, 20);
+        var responseDto = List.of(responseDTO);
+        given(taskService.findAllTasks(null, null, pageable)).willReturn(responseDto);
 
-        ResultActions response = mockMvc.perform(post("/users")
+        ResultActions response = mockMvc.perform(get("/tasks?page=0&size=20")
+                .accept(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.size()", CoreMatchers.is(responseDto.size())));
+    }
+
+    @Test
+    void getAllTasks_validation_params() throws Exception {
+        ResultActions response = mockMvc.perform(get("/tasks?authorId=0&performerId=-1")
+                .accept(MediaType.APPLICATION_JSON)
+        );
+
+        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(content().json("""
+                        {
+                            "code": "400 BAD_REQUEST",
+                            "message": "Invalid Data",
+                            "authorId": "must be greater than 0",
+                            "performerId": "must be greater than 0"
+                        }
+                        """));
+    }
+
+    @Test
+    void postTask() throws Exception {
+        given(taskService.createTask(Mockito.any(TaskCreateDTO.class))).willReturn(responseDTO);
+
+        ResultActions response = mockMvc.perform(post("/tasks")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(createDTO))
@@ -118,8 +165,8 @@ class UserControllerTest {
     }
 
     @Test
-    void postUser_validation_nulls() throws Exception {
-        ResultActions response = mockMvc.perform(post("/users")
+    void postTask_validation_nulls() throws Exception {
+        ResultActions response = mockMvc.perform(post("/tasks")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}")
@@ -130,39 +177,20 @@ class UserControllerTest {
                         {
                             "code": "400 BAD_REQUEST",
                             "message": "Invalid Data",
-                            "email": "must not be blank",
-                            "rawPassword": "must not be blank",
-                            "authorities": "must not be empty"
+                            "title": "must not be blank",
+                            "description": "must not be null",
+                            "status": "must not be null",
+                            "priority": "must not be null",
+                            "authorId": "must be greater than 0"
                         }
                         """));
     }
 
     @Test
-    void postUser_validation_email() throws Exception {
-        createDTO.setEmail("not-email");
-        var notValid = createDTO;
+    void putTask() throws Exception {
+        given(taskService.putTask(Mockito.any(TaskPutDTO.class))).willReturn(responseDTO);
 
-        ResultActions response = mockMvc.perform(post("/users")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(notValid))
-        );
-
-        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(content().json("""
-                        {
-                            "code": "400 BAD_REQUEST",
-                            "message": "Invalid Data",
-                            "email": "must be a well-formed email address"
-                        }
-                        """));
-    }
-
-    @Test
-    void putUser() throws Exception {
-        given(userService.putUser(Mockito.any(UserPutDTO.class))).willReturn(responseDTO);
-
-        ResultActions response = mockMvc.perform(put("/users")
+        ResultActions response = mockMvc.perform(put("/tasks")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(putDTO))
@@ -173,8 +201,8 @@ class UserControllerTest {
     }
 
     @Test
-    void putUser_validation_nulls() throws Exception {
-        ResultActions response = mockMvc.perform(put("/users")
+    void putTask_validation_nulls() throws Exception {
+        ResultActions response = mockMvc.perform(put("/tasks")
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}")
@@ -186,40 +214,21 @@ class UserControllerTest {
                             "code": "400 BAD_REQUEST",
                             "message": "Invalid Data",
                             "id": "must be greater than 0",
-                            "email": "must not be blank",
-                            "rawPassword": "must not be blank",
-                            "authorities": "must not be empty"
+                            "title": "must not be blank",
+                            "description": "must not be null",
+                            "status": "must not be null",
+                            "priority": "must not be null",
+                            "authorId": "must be greater than 0"
                         }
                         """));
     }
 
     @Test
-    void putUser_validation_email() throws Exception {
-        putDTO.setEmail("not-email");
-        var notValid = putDTO;
-
-        ResultActions response = mockMvc.perform(put("/users")
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(notValid))
-        );
-
-        response.andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(content().json("""
-                        {
-                            "code": "400 BAD_REQUEST",
-                            "message": "Invalid Data",
-                            "email": "must be a well-formed email address"
-                        }
-                        """));
-    }
-
-    @Test
-    void getUserById() throws Exception {
+    void getTaskById() throws Exception {
         long id = 1L;
-        given(userService.findUserById(id)).willReturn(responseDTO);
+        given(taskService.findTaskById(id)).willReturn(responseDTO);
 
-        ResultActions response = mockMvc.perform(get("/users/%d".formatted(id))
+        ResultActions response = mockMvc.perform(get("/tasks/%d".formatted(id))
                 .accept(MediaType.APPLICATION_JSON)
         );
 
@@ -229,8 +238,8 @@ class UserControllerTest {
 
     @ParameterizedTest
     @ValueSource(longs = {0L, -2L})
-    void getUserById_validation_params(long id) throws Exception {
-        ResultActions response = mockMvc.perform(get("/users/%d".formatted(id))
+    void getTaskById_validation_params(long id) throws Exception {
+        ResultActions response = mockMvc.perform(get("/tasks/%d".formatted(id))
                 .contentType(MediaType.APPLICATION_JSON)
         );
 
@@ -245,19 +254,19 @@ class UserControllerTest {
     }
 
     @Test
-    void deleteUserById() throws Exception {
+    void deleteTaskById() throws Exception {
         long id = 1L;
-        doNothing().when(userService).deleteUserById(id);
+        doNothing().when(taskService).deleteTaskById(id);
 
-        ResultActions response = mockMvc.perform(delete("/users/%d".formatted(id)));
+        ResultActions response = mockMvc.perform(delete("/tasks/%d".formatted(id)));
 
         response.andExpect(MockMvcResultMatchers.status().isNoContent());
     }
 
     @ParameterizedTest
     @ValueSource(longs = {0L, -2L})
-    void deleteUserById_validation_params(long id) throws Exception {
-        ResultActions response = mockMvc.perform(delete("/users/%d".formatted(id))
+    void deleteTaskById_validation_params(long id) throws Exception {
+        ResultActions response = mockMvc.perform(delete("/tasks/%d".formatted(id))
                 .contentType(MediaType.APPLICATION_JSON)
         );
 
@@ -272,11 +281,11 @@ class UserControllerTest {
     }
 
     @Test
-    void patchUserById() throws Exception {
+    void patchTaskById() throws Exception {
         long id = 1L;
-        given(userService.patchUserById(eq(id), Mockito.any(UserPatchDTO.class))).willReturn(responseDTO);
+        given(taskService.patchTask(eq(id), Mockito.any(TaskPatchDTO.class))).willReturn(responseDTO);
 
-        ResultActions response = mockMvc.perform(patch("/users/%d".formatted(id))
+        ResultActions response = mockMvc.perform(patch("/tasks/%d".formatted(id))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(patchDTO))
@@ -288,8 +297,8 @@ class UserControllerTest {
 
     @ParameterizedTest
     @ValueSource(longs = {0L, -2L})
-    void patchUserById_validation_params(long id) throws Exception {
-        ResultActions response = mockMvc.perform(patch("/users/%d".formatted(id))
+    void patchTaskById_validation_params(long id) throws Exception {
+        ResultActions response = mockMvc.perform(patch("/tasks/%d".formatted(id))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(patchDTO))
@@ -306,11 +315,11 @@ class UserControllerTest {
     }
 
     @Test
-    void patchUserById_validation_withoutBody() throws Exception {
+    void patchTaskById_validation_withoutBody() throws Exception {
         long id = 1L;
-        given(userService.patchUserById(eq(id), Mockito.any(UserPatchDTO.class))).willReturn(responseDTO);
+        given(taskService.patchTask(eq(id), Mockito.any(TaskPatchDTO.class))).willReturn(responseDTO);
 
-        ResultActions response = mockMvc.perform(patch("/users/%d".formatted(id))
+        ResultActions response = mockMvc.perform(patch("/tasks/%d".formatted(id))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}")

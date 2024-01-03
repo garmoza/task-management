@@ -42,7 +42,7 @@ public class TaskPatchDTO extends PatchDTO {
         addPatchedAttr("priority");
     }
 
-    public void setAuthorId(Long authorId) {
+    public void setAuthorId(long authorId) {
         this.authorId = authorId;
         addPatchedAttr("authorId");
     }
