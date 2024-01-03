@@ -46,6 +46,12 @@ public class SecurityFilterChainConfig {
                 .requestMatchers(HttpMethod.GET, "/users/**").hasAnyRole("ADMIN", "USER")
                 .requestMatchers(HttpMethod.DELETE, "/users/**").hasAnyRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/users/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers(HttpMethod.GET, "/tasks").hasAnyRole("ADMIN", "USER")
+                .requestMatchers(HttpMethod.POST, "/tasks").hasAnyRole("ADMIN", "USER")
+                .requestMatchers(HttpMethod.PUT, "/tasks").hasAnyRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/tasks/**").hasAnyRole("ADMIN", "USER")
+                .requestMatchers(HttpMethod.DELETE, "/tasks/**").hasAnyRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/tasks/**").hasAnyRole("ADMIN", "USER")
                 .anyRequest().authenticated());
 
         return http.build();
