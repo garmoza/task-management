@@ -42,7 +42,7 @@ class UserDtoMapperTest {
 
     @Test
     void toEntity() {
-        User mappedEntity = dtoMapper.toEntity(createDTO);
+        var mappedEntity = dtoMapper.toEntity(createDTO);
         mappedEntity.setId(1L);
 
         assertThat(mappedEntity)
@@ -52,7 +52,7 @@ class UserDtoMapperTest {
 
     @Test
     void toResponseDTO() {
-        UserResponseDTO mappedDTO = dtoMapper.toResponseDTO(entity);
+        var mappedDTO = dtoMapper.toResponseDTO(entity);
 
         assertThat(mappedDTO)
                 .usingRecursiveComparison()
