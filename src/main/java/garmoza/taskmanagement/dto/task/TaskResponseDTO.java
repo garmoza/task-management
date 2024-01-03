@@ -10,9 +10,9 @@ import lombok.Setter;
 @Setter
 @Builder
 public class TaskResponseDTO {
-    long id;
-    String title;
-    String description;
-    TaskStatus status;
-    TaskPriority priority;
+    private long id;
+    private String title;
+    private String description;
+    private TaskStatus status;
+    private TaskPriority priority;
 }

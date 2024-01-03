@@ -14,16 +14,16 @@ import lombok.Setter;
 @Builder
 public class TaskPutDTO {
     @Positive
-    long id;
+    private long id;
     @NotBlank
-    String title;
+    private String title;
     @NotNull
-    String description;
+    private String description;
     @NotNull
-    TaskStatus status;
+    private TaskStatus status;
     @NotNull
-    TaskPriority priority;
+    private TaskPriority priority;
     @Positive
-    long authorId;
-    Long performerId;
+    private long authorId;
+    private Long performerId;
 }
