@@ -89,13 +89,6 @@ class UserServiceTest {
         userPatchDTO.setEmail("patched@mail.com");
         userPatchDTO.setRawPassword("patched_pass");
         userPatchDTO.setAuthorities(Set.of("ROLE_PATCHED"));
-
-        Authentication a = new UsernamePasswordAuthenticationToken(
-                "test@mail.com",
-                null,
-                Set.of("ROLE_ADMIN").stream().map(SimpleGrantedAuthority::new).toList()
-        );
-        SecurityContextHolder.getContext().setAuthentication(a);
     }
 
     @Test
@@ -201,7 +194,9 @@ class UserServiceTest {
     }
 
     @Test
-    void patchUserById() {
+    void patchUserById_ROLE_ADMIN() {
+        authenticateAdmin();
+
         long userId = 1L;
         given(userRepository.findById(userId)).willReturn(Optional.of(user));
         doNothing().when(patchDtoValidator).validate(userPatchDTO, Set.of("email", "rawPassword", "authorities"));
@@ -219,5 +214,46 @@ class UserServiceTest {
         assertEquals(userPatchDTO.getAuthorities(), userBeforeSave.getAuthorities());
 
         assertThat(patchedDTO).isEqualTo(userResponseDTO);
+    }
+
+    @Test
+    void patchUserById_currentUser() {
+        authenticateCurrentUser();
+
+        long userId = 1L;
+        given(userRepository.findById(userId)).willReturn(Optional.of(user));
+        doNothing().when(patchDtoValidator).validate(userPatchDTO, Set.of("email", "rawPassword"));
+        given(passwordEncoder.encode(userPatchDTO.getRawPassword())).willReturn("encoded-pass");
+        given(userRepository.save(Mockito.any(User.class))).willReturn(user);
+        given(userDtoMapper.toResponseDTO(user)).willReturn(userResponseDTO);
+
+        UserResponseDTO patchedDTO = userService.patchUserById(userId, userPatchDTO);
+
+        // patched instance before save
+        then(userRepository).should().save(userArgumentCaptor.capture());
+        User userBeforeSave = userArgumentCaptor.getValue();
+        assertEquals(userPatchDTO.getEmail(), userBeforeSave.getEmail());
+        assertEquals("encoded-pass", userBeforeSave.getPassword());
+        assertEquals(userPatchDTO.getAuthorities(), userBeforeSave.getAuthorities());
+
+        assertThat(patchedDTO).isEqualTo(userResponseDTO);
+    }
+
+    private void authenticateAdmin() {
+        Authentication a = new UsernamePasswordAuthenticationToken(
+                "test@mail.com",
+                null,
+                Set.of("ROLE_ADMIN").stream().map(SimpleGrantedAuthority::new).toList()
+        );
+        SecurityContextHolder.getContext().setAuthentication(a);
+    }
+
+    private void authenticateCurrentUser() {
+        Authentication a = new UsernamePasswordAuthenticationToken(
+                user.getEmail(),
+                null,
+                Set.of("ROLE_USER").stream().map(SimpleGrantedAuthority::new).toList()
+        );
+        SecurityContextHolder.getContext().setAuthentication(a);
     }
 }

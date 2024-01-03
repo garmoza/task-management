@@ -283,7 +283,7 @@ class TaskControllerTest {
     @Test
     void patchTaskById() throws Exception {
         long id = 1L;
-        given(taskService.patchTask(eq(id), Mockito.any(TaskPatchDTO.class))).willReturn(responseDTO);
+        given(taskService.patchTaskById(eq(id), Mockito.any(TaskPatchDTO.class))).willReturn(responseDTO);
 
         ResultActions response = mockMvc.perform(patch("/tasks/%d".formatted(id))
                 .accept(MediaType.APPLICATION_JSON)
@@ -317,7 +317,7 @@ class TaskControllerTest {
     @Test
     void patchTaskById_validation_withoutBody() throws Exception {
         long id = 1L;
-        given(taskService.patchTask(eq(id), Mockito.any(TaskPatchDTO.class))).willReturn(responseDTO);
+        given(taskService.patchTaskById(eq(id), Mockito.any(TaskPatchDTO.class))).willReturn(responseDTO);
 
         ResultActions response = mockMvc.perform(patch("/tasks/%d".formatted(id))
                 .accept(MediaType.APPLICATION_JSON)

@@ -57,6 +57,6 @@ public class TaskController {
 
     @PatchMapping("/{id}")
     public TaskResponseDTO patchTaskById(@PathVariable @Positive long id, @RequestBody TaskPatchDTO dto) {
-        return taskService.patchTask(id, dto);
+        return taskService.patchTaskById(id, dto);
     }
 }
