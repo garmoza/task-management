@@ -25,6 +25,12 @@ http://localhost:8080/swagger-ui/index.html
 | ROLE_ADMIN | All        | All         | All        | All             | All                | All (title, description, status, priority, authorId, performerId)                                                  |
 | ROLE_USER  | All        | All         | -          | All             | -                  | Current user is author (title, description, status, priority, performerId)<br/> Current user is performer (status) |
 
+
+|            | POST /users                 | GET /users/{id} | DELETE /users/{id} |
+|------------|-----------------------------|-----------------|--------------------|
+| ROLE_ADMIN | All (author - current user) | All             | All                |
+| ROLE_USER  | All (author - current user) | All             | -                  |
+
 Запуск PostgreSQL для локальной разработки
 ```bash
 docker compose -f .\docker-compose-postgresql.yaml up -d

@@ -15,6 +15,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Optional;
 import java.util.Set;
@@ -82,7 +86,6 @@ class CommentServiceTest {
         createDTO = CommentCreateDTO.builder()
                 .body("Comment Body")
                 .taskId(2L)
-                .authorId(3L)
                 .build();
         responseDTO = CommentResponseDTO.builder()
                 .id(1L)
@@ -94,7 +97,7 @@ class CommentServiceTest {
     private ArgumentCaptor<Comment> commentArgumentCaptor;
 
     @Test
-    void saveNewComment() throws Exception {
+    void saveNewComment() {
         comment.setTask(null);
         comment.setAuthor(null);
         given(commentRepository.save(Mockito.any(Comment.class))).will(i -> i.getArgument(0));
@@ -110,11 +113,12 @@ class CommentServiceTest {
 
     @Test
     void createComment() {
+        authenticateAuthor();
         comment.setTask(null);
         comment.setAuthor(null);
         given(commentDtoMapper.toEntity(createDTO)).willReturn(comment);
         given(taskRepository.findById(createDTO.getTaskId())).willReturn(Optional.of(task));
-        given(userRepository.findById(createDTO.getAuthorId())).willReturn(Optional.of(author));
+        given(userRepository.findUserByEmail("author@mail.com")).willReturn(Optional.of(author));
         given(commentRepository.save(comment)).willReturn(comment);
         given(commentDtoMapper.toResponseDTO(comment)).willReturn(responseDTO);
 
@@ -137,10 +141,10 @@ class CommentServiceTest {
 
     @Test
     void createComment_authorNotFound() {
+        authenticateAuthor();
         long taskId = createDTO.getTaskId();
-        long authorId = createDTO.getAuthorId();
         given(taskRepository.findById(taskId)).willReturn(Optional.of(task));
-        given(userRepository.findById(authorId)).willReturn(Optional.empty());
+        given(userRepository.findUserByEmail("author@mail.com")).willReturn(Optional.empty());
 
         assertThrows(UserNotFoundException.class, () -> commentService.createComment(createDTO));
     }
@@ -177,5 +181,14 @@ class CommentServiceTest {
         commentService.deleteCommentById(commentId);
 
         then(commentRepository).should().deleteById(commentId);
+    }
+
+    private void authenticateAuthor() {
+        Authentication a = new UsernamePasswordAuthenticationToken(
+                "author@mail.com",
+                null,
+                Set.of("ROLE_ADMIN").stream().map(SimpleGrantedAuthority::new).toList()
+        );
+        SecurityContextHolder.getContext().setAuthentication(a);
     }
 }

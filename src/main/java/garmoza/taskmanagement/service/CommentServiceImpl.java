@@ -13,6 +13,8 @@ import garmoza.taskmanagement.repository.CommentRepository;
 import garmoza.taskmanagement.repository.TaskRepository;
 import garmoza.taskmanagement.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -33,10 +35,12 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public CommentResponseDTO createComment(CommentCreateDTO dto) {
+        Authentication auth = getAuthentication();
         Task task = taskRepository.findById(dto.getTaskId())
                 .orElseThrow(() -> new TaskNotFoundException(dto.getTaskId()));
-        User author = userRepository.findById(dto.getAuthorId())
-                .orElseThrow(() -> new UserNotFoundException(dto.getAuthorId()));
+        User author = userRepository.findUserByEmail(auth.getName())
+                .orElseThrow(() -> new UserNotFoundException("user with email (%s) not found".formatted(auth.getName())));
+
         Comment newComment = dtoMapper.toEntity(dto);
 
         Comment comment = saveNewComment(task, author, newComment);
@@ -55,5 +59,9 @@ public class CommentServiceImpl implements CommentService {
     @Override
     public void deleteCommentById(long id) {
         commentRepository.deleteById(id);
+    }
+
+    private Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
     }
 }

@@ -14,6 +14,4 @@ public class CommentCreateDTO {
     private String body;
     @Positive
     long taskId;
-    @Positive
-    long authorId;
 }

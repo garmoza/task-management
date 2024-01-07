@@ -22,7 +22,6 @@ class CommentDtoMapperTest {
         createDTO = CommentCreateDTO.builder()
                 .body("Comment body")
                 .taskId(2L)
-                .authorId(3L)
                 .build();
 
         responseDTO = CommentResponseDTO.builder()

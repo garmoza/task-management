@@ -49,7 +49,6 @@ class CommentControllerTest {
         createDTO = CommentCreateDTO.builder()
                 .body("Comment Body")
                 .taskId(2L)
-                .authorId(3L)
                 .build();
         responseDTO = CommentResponseDTO.builder()
                 .id(1L)
@@ -92,8 +91,7 @@ class CommentControllerTest {
                             "code": "400 BAD_REQUEST",
                             "message": "Invalid Data",
                             "body": "must not be blank",
-                            "taskId": "must be greater than 0",
-                            "authorId": "must be greater than 0"
+                            "taskId": "must be greater than 0"
                         }
                         """));
     }
