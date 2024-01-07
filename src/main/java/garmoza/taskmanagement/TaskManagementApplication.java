@@ -4,10 +4,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class TaskManagement3Application {
+public class TaskManagementApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TaskManagement3Application.class, args);
+        SpringApplication.run(TaskManagementApplication.class, args);
     }
 
 }
