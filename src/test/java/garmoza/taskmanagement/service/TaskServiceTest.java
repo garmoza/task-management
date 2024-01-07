@@ -142,6 +142,8 @@ class TaskServiceTest {
 
     @Test
     void createTask() {
+        task.setAuthor(null);
+        task.setPerformer(null);
         given(taskDtoMapper.toEntity(createDTO)).willReturn(task);
         given(userRepository.findById(createDTO.getAuthorId())).willReturn(Optional.of(author));
         given(userRepository.findById(createDTO.getPerformerId())).willReturn(Optional.of(performer));
