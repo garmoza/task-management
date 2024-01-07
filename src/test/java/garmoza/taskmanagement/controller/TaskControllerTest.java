@@ -37,7 +37,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest({TaskController.class})
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc(addFilters = false) // disables security
 @Import({JwtServiceImpl.class})
 @ExtendWith(MockitoExtension.class)
 class TaskControllerTest {
